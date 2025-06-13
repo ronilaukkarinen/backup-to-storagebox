@@ -101,7 +101,7 @@ ssh-keygen -t rsa -b 4096
 cat ~/.ssh/id_rsa.pub | ssh -p 23 u123456@u123456.your-storagebox.de install-ssh-key
 ```
 
-## 🚫 Default Excludes
+## 🚫 Default excludes
 
 The script automatically excludes:
 - Cache directories (`.cache/`, `cache/`)
@@ -109,7 +109,7 @@ The script automatically excludes:
 - Temporary files (`*.tmp`, `*.swp`)
 - System directories (`/dev/`, `/proc/`, `/sys/`, `/tmp/`, `/run/`, `/mnt/`, `/media/`)
 
-## 📊 What You'll See
+## 📊 What you'll see
 
 ```
 ⚡ Backup to Storagebox v2.0.0
@@ -132,16 +132,3 @@ Documents/file1.txt
 
 🎉 Backup completed in 45s
 ```
-
-## 🆚 Version 2.0.0 Changes
-
-This is a **major rewrite** that simplifies the script significantly:
-
-- ❌ **Removed**: Config files (`.env`, `.directories`, `.excludes`)
-- ✅ **Added**: Simple command-line arguments
-- ✅ **Added**: Environment variable configuration
-- ✅ **Improved**: Much easier to use and understand
-
-## 📄 License
-
-MIT License - feel free to use and modify!
