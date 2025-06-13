@@ -89,7 +89,7 @@ nano .env  # Edit with your credentials
 ./backup-to-storagebox.sh /var/www /backups/infinity/www
 ```
 
-## 🔑 SSH Key Setup
+## 🔑 SSH key setup
 
 1. Generate SSH key if you don't have one:
 ```bash
