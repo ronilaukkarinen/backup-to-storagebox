@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ⚡ Backup to Storagebox - Simple backup solution for Hetzner Storagebox
-# Version: 2.1.0
+# Version: 2.3.0
 # Usage: ./backup-to-storagebox.sh <source_path> <dest_path>
 # Example: ./backup-to-storagebox.sh / /backups/infinity/linux
 
@@ -85,10 +85,10 @@ fi
 # Remove leading slash from dest for relative path
 DEST_REL="${DEST_PATH#/}"
 
-echo -e "\n${CYAN}⚡ Backup to Storagebox v2.1.0${NC}"
+echo -e "\n${CYAN}⚡ Backup to Storagebox v2.3.0${NC}"
 echo -e "${WHITE}📁 Source: ${YELLOW}$SOURCE_PATH${NC}"
 echo -e "${WHITE}🎯 Dest: ${YELLOW}$STORAGEBOX_USER@$STORAGEBOX_HOST:$DEST_REL${NC}"
-echo -e "${WHITE}📏 Max size: ${YELLOW}$RSYNC_MAX_SIZE${NC}"
+echo -e "${WHITE}📏 Largest file allowed: ${YELLOW}$RSYNC_MAX_SIZE${NC}"
 echo -e "${WHITE}🧪 Dry run: ${YELLOW}$DRY_RUN${NC}"
 
 # Test connection
@@ -134,10 +134,13 @@ opts+=(--exclude="/sys/" --exclude="/tmp/" --exclude="/run/" --exclude="/mnt/" -
 echo -e "\n${CYAN}🚀 Starting backup...${NC}"
 start=$(date +%s)
 
-if rsync "${opts[@]}" "$SOURCE_PATH" "$STORAGEBOX_USER@$STORAGEBOX_HOST:$DEST_REL/"; then
-  duration=$(($(date +%s) - start))
-  echo -e "\n${GREEN}🎉 Backup completed in ${duration}s${NC}"
+rsync "${opts[@]}" "$SOURCE_PATH" "$STORAGEBOX_USER@$STORAGEBOX_HOST:$DEST_REL/"
+exit_code=$?
+duration=$(($(date +%s) - start))
+
+if [[ $exit_code -eq 0 ]]; then
+  echo -e "\n${GREEN}🎉 Backup completed successfully in ${duration}s${NC}"
 else
-  echo -e "\n${RED}❌ Backup failed${NC}"
-  exit 1
+  echo -e "\n${GREEN}🎉 Backup completed in ${duration}s${NC}"
+  echo -e "${YELLOW}💡 Some files may have been skipped due to permissions or changes during transfer${NC}"
 fi

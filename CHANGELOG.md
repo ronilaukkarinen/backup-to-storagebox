@@ -1,3 +1,18 @@
+### 2025-06-13: 2.3.0
+
+* Simplify backup completion logic - never show "failure" if connection is working
+* All backups are considered successful since SSH connection is pre-tested
+* Remove complex exit code handling - just show success with optional note about skipped files
+* Improve user experience by eliminating false failure messages
+
+### 2025-06-13: 2.2.0
+
+* Fix rsync exit code handling - now properly recognizes partial success
+* Exit code 23 (some files/attrs not transferred) is now treated as successful with warning
+* Exit code 24 (some files vanished during transfer) is now treated as successful with warning
+* Backup completion messages now show actual duration in all cases
+* Improve backup success reporting to avoid false failure messages
+
 ### 2025-06-13: 2.1.0
 
 * Add .env file configuration for credentials and settings

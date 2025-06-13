@@ -101,6 +101,17 @@ ssh-keygen -t rsa -b 4096
 cat ~/.ssh/id_rsa.pub | ssh -p 23 u123456@u123456.your-storagebox.de install-ssh-key
 ```
 
+## ⏰ Cronjob
+
+### Daily backup at 2 AM
+```bash
+# Edit crontab
+crontab -e
+
+# Add this line for daily backup at 2:00 AM
+0 2 * * * /path/to/backup-to-storagebox.sh / /backups/myserver/linux >> /var/log/backup.log 2>&1
+```
+
 ## 🚫 Default excludes
 
 The script automatically excludes:
@@ -115,7 +126,7 @@ The script automatically excludes:
 ⚡ Backup to Storagebox v2.0.0
 📁 Source: /home/user/
 🎯 Dest: u123456@u123456.your-storagebox.de:backups/myserver/home
-📏 Max size: 2G
+📏 Largest file allowed: 2G
 
 🔌 Testing connection...
 ✅ Connected
