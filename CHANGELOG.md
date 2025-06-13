@@ -1,0 +1,62 @@
+### 2025-06-13: 2.1.0
+
+* Add .env file configuration for credentials and settings
+* Remove hardcoded defaults from script - all configuration now in .env
+* Add RSYNC_BANDWIDTH_LIMIT option for bandwidth limiting
+* Add RSYNC_TIMEOUT option for connection timeout configuration
+* Improve configuration management organization
+* Fix proper separation of configuration from code
+
+### 2025-06-13: 2.0.0
+
+* Major rewrite: simplify to use command-line arguments instead of config files
+* Breaking change: now uses `./script.sh <source> <dest>` syntax
+* Add environment variables for configuration (STORAGEBOX_USER, STORAGEBOX_HOST, etc.)
+* Remove complex configuration files (.env, .directories, .excludes)
+* Enhance interface to be much cleaner and easier to use
+* Fix relative path handling for Hetzner Storageboxes
+* Example: `./backup-to-storagebox.sh / /backups/infinity/linux`
+
+### 2025-06-13: 1.3.0
+
+* Add RSYNC_MAX_SIZE option to limit file size (e.g., 2G to skip files over 2GB)
+* Add progress display with --progress and --stats for real-time transfer monitoring
+* Add SHOW_PROGRESS option to control progress display (default: true)
+* Make individual file transfer progress visible during backup
+* Add configuration summary display showing all active options
+* Restore proper backup directory structure (/backups/hostname/linux)
+* Remove problematic --mkpath option for better compatibility
+* Fix SFTP connection syntax errors
+
+### 2025-06-13: 1.2.1
+
+* Critical fix: fix remote directory structure creation for nested paths
+* Critical fix: resolve "No such file or directory" errors during backup
+* Enhance remote directory creation to build complete path hierarchy
+* Improve SSH key path detection for sudo/root usage scenarios
+* Add better rsync exit code handling (partial success for permission issues)
+* Add user context warnings for system directory access
+* Fix destination path construction to match created directory structure
+* Restore configuration example files (env.example, directories.example, excludes.example)
+
+### 2025-06-13: 1.1.0
+
+* Add colorful output with emojis for better user experience
+* Add automatic SSH key installation using Hetzner's install-ssh-key service
+* Improve SFTP connection testing (proper support for Storageboxes)
+* Remove retry functionality to simplify the script
+* Enhance error messages with color coding and better formatting
+* Add visual progress indicators and section separators
+
+### 2025-06-13: 1.0.0
+
+* Initial release of improved backup script
+* Add configuration via .env file for credentials
+* Add .directories file for custom backup locations
+* Add .excludes file for custom exclusion patterns
+* Implement direct Hetzner Storagebox connectivity via SSH/SFTP
+* Remove complex logging functionality for simplicity
+* Make script idempotent and dependency-free
+* Change to update-only mode (newer files only)
+* Add automatic crontab backup functionality
+* Improve documentation with README and examples 
