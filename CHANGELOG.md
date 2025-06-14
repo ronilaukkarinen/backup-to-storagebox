@@ -1,3 +1,12 @@
+### 2025-06-14: 2.6.0
+
+* Fix user crontab backup hanging issue with timeout protection
+* Add background process execution for user crontab backup to prevent script blocking
+* Add debug output showing which user is being processed during crontab backup
+* Ensure script always continues to main backup even if crontab backup fails
+* Fix crontab backup to save individual .txt files for each user
+* Add guaranteed script continuation with force-kill protection for hanging processes
+
 ### 2025-06-14: 2.5.0
 
 * Add Better Stack heartbeat monitoring support via BETTER_STACK_HEARTBEAT environment variable

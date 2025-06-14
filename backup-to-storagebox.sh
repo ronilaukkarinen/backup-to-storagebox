@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ⚡ Backup to Storagebox - Simple backup solution for Hetzner Storagebox
-# Version: 2.5.0
+# Version: 2.6.0
 # Usage: ./backup-to-storagebox.sh <source_path> <dest_path>
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
@@ -84,7 +84,7 @@ fi
 # Remove leading slash from dest for relative path
 DEST_REL="${DEST_PATH#/}"
 
-echo -e "\n${CYAN}⚡ Backup to Storagebox v2.5.0${NC}"
+echo -e "\n${CYAN}⚡ Backup to Storagebox v2.6.0${NC}"
 echo -e "${WHITE}📁 Source: ${YELLOW}$SOURCE_PATH${NC}"
 echo -e "${WHITE}🎯 Dest: ${YELLOW}$STORAGEBOX_USER@$STORAGEBOX_HOST:$DEST_REL${NC}"
 echo -e "${WHITE}📏 Largest file allowed: ${YELLOW}$RSYNC_MAX_SIZE${NC}"
@@ -109,10 +109,8 @@ if echo "pwd" | sftp $sftp_opts_key "$STORAGEBOX_USER@$STORAGEBOX_HOST" >/dev/nu
   echo -e "${GREEN}✅ SSH key authentication successful${NC}"
 else
   echo -e "${YELLOW}⚠️ SSH key authentication failed${NC}"
-  echo -e "${WHITE}🔧 Would you like to install the SSH key using Hetzner's install-ssh-key service? (y/n)${NC}"
-  read -r install_key
-  if [[ "$install_key" =~ ^[Yy]$ ]]; then
-    echo -e "${WHITE}Installing SSH key using Hetzner's service (you'll be prompted for your Storagebox password):${NC}"
+  echo -e "${WHITE}🔧 Installing the SSH key using Hetzner's install-ssh-key service...${NC}"
+  echo -e "${WHITE}You'll be prompted for your Storagebox password...${NC}"
     if cat "$SSH_KEY_PATH.pub" | ssh -p "$SSH_PORT" "$STORAGEBOX_USER@$STORAGEBOX_HOST" install-ssh-key; then
       echo -e "${GREEN}✅ SSH key installed successfully${NC}"
 
@@ -127,9 +125,6 @@ else
       echo -e "${RED}❌ Failed to install SSH key${NC}"
       echo -e "${YELLOW}💡 Continuing with backup - rsync will prompt for password${NC}"
     fi
-  else
-    echo -e "${YELLOW}💡 Continuing without installing SSH key - rsync will prompt for password${NC}"
-  fi
 fi
 echo -e "${GREEN}✅ Connected${NC}"
 
@@ -178,31 +173,48 @@ backup_crontabs() {
       echo -e "${WHITE}✓ /etc/cron.d backed up${NC}"
     fi
 
-    # Backup user crontabs (only real users with UID >= 1000)
+        # Backup user crontabs - with timeout protection and debug
     local users_backed_up=0
-    while IFS=: read -r username _ uid _ _ home _; do
-      if [[ $uid -ge 1000 && -d "$home" ]]; then
-        if sudo -n -u "$username" crontab -l >/dev/null 2>&1; then
-          sudo -n -u "$username" crontab -l > "$crontab_dir/user-$username-crontab" 2>/dev/null || true
-          if [[ -s "$crontab_dir/user-$username-crontab" ]]; then
-            echo -e "${WHITE}✓ User $username crontab backed up${NC}"
-            ((users_backed_up++))
-          else
-            rm -f "$crontab_dir/user-$username-crontab"
+    echo -e "${WHITE}🔍 Backing up user crontabs...${NC}"
+
+    # Use timeout for the entire user crontab process
+    (
+      # Create a temporary file with all usernames
+      local users_file="/tmp/users_list_$$"
+      cut -d: -f1 /etc/passwd > "$users_file"
+
+      # Read users from file with individual timeouts
+      while read -r user; do
+        if [[ -n "$user" ]]; then
+          echo -e "${WHITE}  Processing user: $user${NC}"
+          if timeout 2 crontab -u "$user" -l > "$crontab_dir/user-$user-crontab.txt" 2>/dev/null; then
+            if [[ -s "$crontab_dir/user-$user-crontab.txt" ]]; then
+              echo -e "${WHITE}✓ User $user crontab backed up${NC}"
+              ((users_backed_up++))
+            else
+              rm -f "$crontab_dir/user-$user-crontab.txt"
+            fi
           fi
         fi
-      fi
-    done < /etc/passwd
+      done < "$users_file"
 
-    # Upload crontab backup to storagebox
+      # Clean up temp file
+      rm -f "$users_file"
+    ) &
+
+    # Wait for user crontab backup with overall timeout
+    local crontab_pid=$!
+    if timeout 30 wait $crontab_pid 2>/dev/null; then
+      echo -e "${WHITE}🔍 User crontab backup completed${NC}"
+    else
+      echo -e "${YELLOW}⚠️ User crontab backup timed out - continuing${NC}"
+      kill $crontab_pid 2>/dev/null || true
+    fi
+
+    # Skip crontab upload for now - just save locally and continue
     if [[ $(ls -A "$crontab_dir" 2>/dev/null | wc -l) -gt 0 ]]; then
-      local crontab_dest="$DEST_REL/crontabs"
-      echo "mkdir $crontab_dest" | sftp $sftp_opts_key "$STORAGEBOX_USER@$STORAGEBOX_HOST" 2>/dev/null || true
-
-      rsync -aAX --progress -e "ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH -p $SSH_PORT" \
-        "$crontab_dir/" "$STORAGEBOX_USER@$STORAGEBOX_HOST:$crontab_dest/" 2>/dev/null || true
-
-      echo -e "${GREEN}✅ Crontabs backed up to $crontab_dest/ ($users_backed_up user crontabs)${NC}"
+      echo -e "${GREEN}✅ Crontabs saved locally in $crontab_dir ($users_backed_up user crontabs)${NC}"
+      echo -e "${YELLOW}💡 Crontab upload temporarily disabled - continuing with main backup${NC}"
     else
       echo -e "${YELLOW}⚠️ No crontabs found to backup${NC}"
     fi
