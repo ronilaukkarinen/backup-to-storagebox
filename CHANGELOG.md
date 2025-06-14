@@ -1,3 +1,7 @@
+### 2025-06-14: 2.6.1
+
+* Make Better Stack heartbeat more bulletproof
+
 ### 2025-06-14: 2.6.0
 
 * Fix user crontab backup hanging issue with timeout protection

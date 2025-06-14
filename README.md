@@ -1,5 +1,7 @@
 # 🚀 Backup to Storagebox
 
+![Version](https://img.shields.io/badge/version-2.6.1-blue?style=for-the-badge) ![Bash](https://img.shields.io/badge/bash-%23121011.svg?style=for-the-badge&color=%23222222&logo=gnu-bash&logoColor=white) ![Hetzner](https://img.shields.io/badge/hetzner-%23d50c2d.svg?style=for-the-badge&logo=hetzner&logoColor=white) ![Rsync](https://img.shields.io/badge/rsync-%23FF6B35.svg?style=for-the-badge&logo=rsync&logoColor=white) ![Better Stack](https://img.shields.io/badge/Better%20Stack-%23000000.svg?style=for-the-badge&logo=betterstack&logoColor=white) ![SSH](https://img.shields.io/badge/SSH-%23000000.svg?style=for-the-badge&logo=openssh&logoColor=white)
+
 A simple, fast backup script for Hetzner Storageboxes.
 
 ## ⚡ Quick start

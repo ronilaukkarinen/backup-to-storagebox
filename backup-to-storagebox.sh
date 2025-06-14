@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ⚡ Backup to Storagebox - Simple backup solution for Hetzner Storagebox
-# Version: 2.6.0
+# Version: 2.6.1
 # Usage: ./backup-to-storagebox.sh <source_path> <dest_path>
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
@@ -247,9 +247,21 @@ fi
 # Send heartbeat to Better Stack if configured
 if [[ -n "${BETTER_STACK_HEARTBEAT:-}" ]]; then
   echo -e "\n${CYAN}💓 Sending heartbeat to Better Stack...${NC}"
-  if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT" >/dev/null 2>&1; then
-    echo -e "${GREEN}✅ Heartbeat sent successfully${NC}"
+
+  # Send success or failure heartbeat based on exit code
+  if [[ $exit_code -eq 0 || $exit_code -eq 23 ]]; then
+    # Success heartbeat (exit code 0 or 23 which is partial success)
+    if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT" >/dev/null 2>&1; then
+      echo -e "${GREEN}✅ Heartbeat sent successfully${NC}"
+    else
+      echo -e "${YELLOW}⚠️ Failed to send heartbeat (backup still completed)${NC}"
+    fi
   else
-    echo -e "${YELLOW}⚠️ Failed to send heartbeat (backup still completed)${NC}"
+    # Failure heartbeat with exit code
+    if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT/$exit_code" >/dev/null 2>&1; then
+      echo -e "${GREEN}✅ Failure heartbeat sent (exit code: $exit_code)${NC}"
+    else
+      echo -e "${YELLOW}⚠️ Failed to send failure heartbeat${NC}"
+    fi
   fi
 fi
