@@ -40,7 +40,7 @@
 * Remove complex configuration files (.env, .directories, .excludes)
 * Enhance interface to be much cleaner and easier to use
 * Fix relative path handling for Hetzner Storageboxes
-* Example: `./backup-to-storagebox.sh / /backups/infinity/linux`
+* Example: `./backup-to-storagebox.sh / /backups/myserver/linux`
 
 ### 2025-06-13: 1.3.0
 
@@ -49,7 +49,7 @@
 * Add SHOW_PROGRESS option to control progress display (default: true)
 * Make individual file transfer progress visible during backup
 * Add configuration summary display showing all active options
-* Restore proper backup directory structure (/backups/hostname/linux)
+* Restore proper backup directory structure (/backups/myserver/linux)
 * Remove problematic --mkpath option for better compatibility
 * Fix SFTP connection syntax errors
 

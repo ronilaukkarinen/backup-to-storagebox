@@ -74,19 +74,19 @@ nano .env  # Edit with your credentials
 
 ### Backup entire system
 ```bash
-./backup-to-storagebox.sh / /backups/infinity/linux
+./backup-to-storagebox.sh / /backups/myserver/linux
 ```
 
 ### Backup home directory with custom settings
 ```bash
 # Edit .env to set RSYNC_MAX_SIZE=1G
-./backup-to-storagebox.sh /home/user /backups/infinity/home
+./backup-to-storagebox.sh /home/user /backups/myserver/home
 ```
 
 ### Test backup (dry run)
 ```bash
 # Edit .env to set DRY_RUN=true
-./backup-to-storagebox.sh /var/www /backups/infinity/www
+./backup-to-storagebox.sh /var/www /backups/myserver/www
 ```
 
 ## 🔑 SSH key setup

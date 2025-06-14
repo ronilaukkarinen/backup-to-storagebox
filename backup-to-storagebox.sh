@@ -3,7 +3,7 @@
 # ⚡ Backup to Storagebox - Simple backup solution for Hetzner Storagebox
 # Version: 2.4.0
 # Usage: ./backup-to-storagebox.sh <source_path> <dest_path>
-# Example: ./backup-to-storagebox.sh / /backups/infinity/linux
+# Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 set -euo pipefail
 
@@ -23,7 +23,7 @@ NC='\033[0m'
 show_usage() {
   echo -e "${CYAN}⚡ Backup to Storagebox${NC}"
   echo -e "${WHITE}Usage: $0 <source_path> <dest_path>${NC}"
-  echo -e "${WHITE}Example: $0 / /backups/infinity/linux${NC}"
+  echo -e "${WHITE}Example: $0 / /backups/myserver/linux${NC}"
   echo ""
   echo -e "${YELLOW}Configuration:${NC}"
   echo -e "${WHITE}  Copy .env.example to .env and configure your settings${NC}"
