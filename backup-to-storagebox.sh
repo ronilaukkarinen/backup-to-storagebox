@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ⚡ Backup to Storagebox - Simple backup solution for Hetzner Storagebox
-# Version: 2.4.0
+# Version: 2.5.0
 # Usage: ./backup-to-storagebox.sh <source_path> <dest_path>
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
@@ -84,7 +84,7 @@ fi
 # Remove leading slash from dest for relative path
 DEST_REL="${DEST_PATH#/}"
 
-echo -e "\n${CYAN}⚡ Backup to Storagebox v2.4.0${NC}"
+echo -e "\n${CYAN}⚡ Backup to Storagebox v2.5.0${NC}"
 echo -e "${WHITE}📁 Source: ${YELLOW}$SOURCE_PATH${NC}"
 echo -e "${WHITE}🎯 Dest: ${YELLOW}$STORAGEBOX_USER@$STORAGEBOX_HOST:$DEST_REL${NC}"
 echo -e "${WHITE}📏 Largest file allowed: ${YELLOW}$RSYNC_MAX_SIZE${NC}"
@@ -159,7 +159,63 @@ opts+=(--exclude=".cache/" --exclude="cache/" --exclude=".git/" --exclude="node_
 opts+=(--exclude="*.tmp" --exclude="*.swp" --exclude="/dev/" --exclude="/proc/")
 opts+=(--exclude="/sys/" --exclude="/tmp/" --exclude="/run/" --exclude="/mnt/" --exclude="/media/")
 
+# Backup crontabs if running as root
+backup_crontabs() {
+  if [[ $EUID -eq 0 ]]; then
+    echo -e "${CYAN}📅 Backing up crontabs...${NC}"
+    local crontab_dir="/tmp/crontab-backup-$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$crontab_dir"
 
+    # Backup system crontab
+    if [[ -f /etc/crontab ]]; then
+      cp /etc/crontab "$crontab_dir/system-crontab"
+      echo -e "${WHITE}✓ System crontab backed up${NC}"
+    fi
+
+    # Backup cron.d directory
+    if [[ -d /etc/cron.d ]]; then
+      cp -r /etc/cron.d "$crontab_dir/"
+      echo -e "${WHITE}✓ /etc/cron.d backed up${NC}"
+    fi
+
+    # Backup user crontabs (only real users with UID >= 1000)
+    local users_backed_up=0
+    while IFS=: read -r username _ uid _ _ home _; do
+      if [[ $uid -ge 1000 && -d "$home" ]]; then
+        if sudo -n -u "$username" crontab -l >/dev/null 2>&1; then
+          sudo -n -u "$username" crontab -l > "$crontab_dir/user-$username-crontab" 2>/dev/null || true
+          if [[ -s "$crontab_dir/user-$username-crontab" ]]; then
+            echo -e "${WHITE}✓ User $username crontab backed up${NC}"
+            ((users_backed_up++))
+          else
+            rm -f "$crontab_dir/user-$username-crontab"
+          fi
+        fi
+      fi
+    done < /etc/passwd
+
+    # Upload crontab backup to storagebox
+    if [[ $(ls -A "$crontab_dir" 2>/dev/null | wc -l) -gt 0 ]]; then
+      local crontab_dest="$DEST_REL/crontabs"
+      echo "mkdir $crontab_dest" | sftp $sftp_opts_key "$STORAGEBOX_USER@$STORAGEBOX_HOST" 2>/dev/null || true
+
+      rsync -aAX --progress -e "ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH -p $SSH_PORT" \
+        "$crontab_dir/" "$STORAGEBOX_USER@$STORAGEBOX_HOST:$crontab_dest/" 2>/dev/null || true
+
+      echo -e "${GREEN}✅ Crontabs backed up to $crontab_dest/ ($users_backed_up user crontabs)${NC}"
+    else
+      echo -e "${YELLOW}⚠️ No crontabs found to backup${NC}"
+    fi
+
+    # Cleanup
+    rm -rf "$crontab_dir"
+  else
+    echo -e "${YELLOW}💡 Skipping crontab backup (not running as root)${NC}"
+  fi
+}
+
+# Backup crontabs automatically when running as root
+backup_crontabs
 
 # Start backup
 echo -e "\n${CYAN}🚀 Starting backup...${NC}"
@@ -174,4 +230,14 @@ if [[ $exit_code -eq 0 ]]; then
 else
   echo -e "\n${GREEN}🎉 Backup completed in ${duration}s${NC}"
   echo -e "${YELLOW}💡 Some files may have been skipped due to permissions or changes during transfer${NC}"
+fi
+
+# Send heartbeat to Better Stack if configured
+if [[ -n "${BETTER_STACK_HEARTBEAT:-}" ]]; then
+  echo -e "\n${CYAN}💓 Sending heartbeat to Better Stack...${NC}"
+  if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT" >/dev/null 2>&1; then
+    echo -e "${GREEN}✅ Heartbeat sent successfully${NC}"
+  else
+    echo -e "${YELLOW}⚠️ Failed to send heartbeat (backup still completed)${NC}"
+  fi
 fi

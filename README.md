@@ -51,6 +51,7 @@ cp env.example .env
 - `RSYNC_MAX_SIZE` - Max file size (default: 2G)
 - `RSYNC_TIMEOUT` - Connection timeout (default: 300)
 - `RSYNC_BANDWIDTH_LIMIT` - Bandwidth limit (e.g., 1000 for 1MB/s)
+- `BETTER_STACK_HEARTBEAT` - Better Stack heartbeat URL for monitoring
 - `DRY_RUN` - Set to 'true' for dry run
 
 ## 🔧 Features
@@ -60,6 +61,8 @@ cp env.example .env
 - ✅ **File size limiting** - Skip large files automatically
 - ✅ **Smart excludes** - Automatically excludes cache, temp files, etc.
 - ✅ **Incremental backups** - Only transfers changed files
+- ✅ **Automatic crontab backup** - Backs up all crontabs when running as root
+- ✅ **Better Stack monitoring** - Optional heartbeat notifications
 - ✅ **Dry run support** - Test before running
 - ✅ **Hetzner Storagebox optimized** - Works perfectly with Storagebox SSH/SFTP
 

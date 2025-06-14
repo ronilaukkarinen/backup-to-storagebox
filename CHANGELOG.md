@@ -1,3 +1,8 @@
+### 2025-06-14: 2.5.0
+
+* Add Better Stack heartbeat monitoring support via BETTER_STACK_HEARTBEAT environment variable
+* Restore automatic crontab backup functionality when running as root
+
 ### 2025-06-14: 2.4.0
 
 * Fix SSH key authentication using Hetzner's official install-ssh-key service
