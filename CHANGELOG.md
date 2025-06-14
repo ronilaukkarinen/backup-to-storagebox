@@ -1,3 +1,10 @@
+### 2025-06-14: 2.7.0
+
+* Fix ongoing issues with the heartbeat
+* Make sure the backup summary is always shown
+* Better version control
+* Add badges to README.md
+
 ### 2025-06-14: 2.6.1
 
 * Make Better Stack heartbeat more bulletproof
