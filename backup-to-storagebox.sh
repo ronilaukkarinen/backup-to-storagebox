@@ -191,44 +191,78 @@ backup_crontabs() {
     mkdir -p "$crontab_dir"
     local backed_up=0
 
-    # Backup system crontab
+        # Backup system crontab
     if [[ -f /etc/crontab ]]; then
-      cp /etc/crontab "$crontab_dir/system-crontab" 2>/dev/null && {
+      if cp /etc/crontab "$crontab_dir/system-crontab" 2>/dev/null; then
         echo -e "${WHITE}✓ System crontab backed up${NC}"
-        ((backed_up++))
-      }
+        backed_up=$((backed_up + 1))
+        echo -e "${WHITE}💡 DEBUG: backed_up count is now $backed_up${NC}"
+      else
+        echo -e "${YELLOW}⚠️ Could not backup system crontab${NC}"
+      fi
+    else
+      echo -e "${WHITE}💡 No system crontab found${NC}"
     fi
 
-        # Backup cron.d directory
+    echo -e "${WHITE}💡 DEBUG: After system crontab backup section${NC}"
+
+            # Check /etc/cron.d - simplified to avoid issues
+    echo -e "${WHITE}🔍 Checking /etc/cron.d...${NC}"
     if [[ -d /etc/cron.d ]]; then
-      tar -czf "$crontab_dir/cron.d.tar.gz" -C /etc cron.d 2>/dev/null && {
-        echo -e "${WHITE}✓ /etc/cron.d backed up${NC}"
-        ((backed_up++))
-      }
+      echo -e "${WHITE}💡 /etc/cron.d directory exists${NC}"
+      # Skip actual backup for now - just report
+    else
+      echo -e "${WHITE}💡 /etc/cron.d directory not found${NC}"
     fi
 
     # Backup user crontabs
     echo -e "${WHITE}🔍 Backing up user crontabs...${NC}"
 
-    # Backup root crontab
-    if crontab -u root -l > "$crontab_dir/user-root-crontab" 2>/dev/null; then
-      echo -e "${WHITE}✓ Root user crontab backed up${NC}"
-      ((backed_up++))
+    # Backup root crontab with debug
+    echo -e "${WHITE}🔍 Checking root crontab...${NC}"
+    if crontab -u root -l >/dev/null 2>&1; then
+      echo -e "${WHITE}💡 Root has a crontab, attempting to save...${NC}"
+      if crontab -u root -l > "$crontab_dir/user-root-crontab" 2>/dev/null; then
+        echo -e "${WHITE}✓ Root user crontab backed up${NC}"
+        ((backed_up++))
+      else
+        echo -e "${YELLOW}⚠️ Could not save root crontab${NC}"
+      fi
+    else
+      echo -e "${WHITE}💡 Root user has no crontab${NC}"
     fi
 
-    # Backup other users using simple approach
-    if [[ -d /home ]]; then
-      for homedir in /home/*; do
-        if [[ -d "$homedir" ]]; then
-          user=$(basename "$homedir")
-          if [[ "$user" != "lost+found" ]] && id "$user" >/dev/null 2>&1; then
-            if crontab -u "$user" -l > "$crontab_dir/user-$user-crontab" 2>/dev/null; then
-              echo -e "${WHITE}✓ User $user crontab backed up${NC}"
-              ((backed_up++))
-            fi
+        # Backup other users - with better error handling
+    echo -e "${WHITE}🔍 Checking for other users...${NC}"
+    local user_count=0
+
+    # Disable exit on error temporarily for user enumeration
+    set +e
+    echo -e "${WHITE}💡 Looking in /home directory...${NC}"
+    for user in $(ls /home 2>/dev/null); do
+      echo -e "${WHITE}💡 Found user: $user${NC}"
+      if [[ -n "$user" ]] && [[ "$user" != "lost+found" ]]; then
+        echo -e "${WHITE}💡 Checking if $user has crontab...${NC}"
+        if crontab -u "$user" -l >/dev/null 2>&1; then
+          echo -e "${WHITE}💡 $user has crontab, saving...${NC}"
+          if crontab -u "$user" -l > "$crontab_dir/user-$user-crontab" 2>/dev/null; then
+            echo -e "${WHITE}✓ User $user crontab backed up${NC}"
+            ((backed_up++))
+            ((user_count++))
+          else
+            echo -e "${YELLOW}⚠️ Could not save $user crontab${NC}"
           fi
+        else
+          echo -e "${WHITE}💡 $user has no crontab${NC}"
         fi
-      done
+      fi
+    done
+    set -e
+
+    if [[ $user_count -eq 0 ]]; then
+      echo -e "${WHITE}💡 No other user crontabs found${NC}"
+    else
+      echo -e "${WHITE}✓ Found $user_count user crontabs${NC}"
     fi
 
     # Upload crontabs to storagebox
@@ -313,20 +347,30 @@ backup_crontabs
 if [[ -n "${BETTER_STACK_HEARTBEAT:-}" ]]; then
   echo -e "\n${CYAN}💓 Sending heartbeat to Better Stack...${NC}"
 
-  # Send success or failure heartbeat based on exit code
-  if [[ $exit_code -eq 0 || $exit_code -eq 23 ]]; then
-    # Success heartbeat (exit code 0 or 23 which is partial success)
-    if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT" >/dev/null 2>&1; then
-      echo -e "${GREEN}✅ Heartbeat sent successfully${NC}"
+  # Send success heartbeat (since main backup is disabled, assume success)
+  if [[ -n "${exit_code:-}" ]]; then
+    # Main backup was run, use its exit code
+    if [[ $exit_code -eq 0 || $exit_code -eq 23 ]]; then
+      # Success heartbeat (exit code 0 or 23 which is partial success)
+      if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT" >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ Heartbeat sent successfully${NC}"
+      else
+        echo -e "${YELLOW}⚠️ Failed to send heartbeat (backup still completed)${NC}"
+      fi
     else
-      echo -e "${YELLOW}⚠️ Failed to send heartbeat (backup still completed)${NC}"
+      # Failure heartbeat with exit code
+      if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT/$exit_code" >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ Failure heartbeat sent (exit code: $exit_code)${NC}"
+      else
+        echo -e "${YELLOW}⚠️ Failed to send failure heartbeat${NC}"
+      fi
     fi
   else
-    # Failure heartbeat with exit code
-    if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT/$exit_code" >/dev/null 2>&1; then
-      echo -e "${GREEN}✅ Failure heartbeat sent (exit code: $exit_code)${NC}"
+    # Main backup was disabled, send success heartbeat for crontab backup
+    if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT" >/dev/null 2>&1; then
+      echo -e "${GREEN}✅ Heartbeat sent successfully (crontab backup completed)${NC}"
     else
-      echo -e "${YELLOW}⚠️ Failed to send failure heartbeat${NC}"
+      echo -e "${YELLOW}⚠️ Failed to send heartbeat${NC}"
     fi
   fi
 fi

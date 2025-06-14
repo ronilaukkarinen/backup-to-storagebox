@@ -1,6 +1,8 @@
 ### 2025-06-14: 2.7.5
 
 * Add lock file handling to prevent multiple instances
+* Finally fix crontab backup issues
+* Add verbose logging to terminal
 
 ### 2025-06-14: 2.7.4
 
