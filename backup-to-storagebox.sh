@@ -5,7 +5,7 @@
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 # Set version
-VERSION_SCRIPT="2.7.3"
+VERSION_SCRIPT="2.7.4"
 
 set -euo pipefail
 
@@ -158,33 +158,93 @@ opts+=(--exclude="/sys/" --exclude="/tmp/" --exclude="/run/" --exclude="/mnt/" -
 
 # Backup crontabs
 backup_crontabs() {
-  echo -e "${CYAN}📅 Backing up crontabs...${NC}"
-
   if [[ $EUID -eq 0 ]]; then
-    # Root mode - backup system crontabs
+    echo -e "${CYAN}📅 Backing up crontabs (root mode)...${NC}"
+    local crontab_dir="/tmp/crontab-backup-$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$crontab_dir"
+    local backed_up=0
+
+    # Backup system crontab
     if [[ -f /etc/crontab ]]; then
-      echo -e "${WHITE}✓ System crontab found${NC}"
+      cp /etc/crontab "$crontab_dir/system-crontab" 2>/dev/null && {
+        echo -e "${WHITE}✓ System crontab backed up${NC}"
+        ((backed_up++))
+      }
     fi
+
+        # Backup cron.d directory
     if [[ -d /etc/cron.d ]]; then
-      echo -e "${WHITE}✓ /etc/cron.d directory found${NC}"
+      tar -czf "$crontab_dir/cron.d.tar.gz" -C /etc cron.d 2>/dev/null && {
+        echo -e "${WHITE}✓ /etc/cron.d backed up${NC}"
+        ((backed_up++))
+      }
     fi
-    if crontab -u root -l >/dev/null 2>&1; then
-      echo -e "${WHITE}✓ Root user crontab found${NC}"
+
+    # Backup user crontabs
+    echo -e "${WHITE}🔍 Backing up user crontabs...${NC}"
+
+    # Backup root crontab
+    if crontab -u root -l > "$crontab_dir/user-root-crontab" 2>/dev/null; then
+      echo -e "${WHITE}✓ Root user crontab backed up${NC}"
+      ((backed_up++))
     fi
+
+    # Backup other users using simple approach
+    if [[ -d /home ]]; then
+      for homedir in /home/*; do
+        if [[ -d "$homedir" ]]; then
+          user=$(basename "$homedir")
+          if [[ "$user" != "lost+found" ]] && id "$user" >/dev/null 2>&1; then
+            if crontab -u "$user" -l > "$crontab_dir/user-$user-crontab" 2>/dev/null; then
+              echo -e "${WHITE}✓ User $user crontab backed up${NC}"
+              ((backed_up++))
+            fi
+          fi
+        fi
+      done
+    fi
+
+    # Upload crontabs to storagebox
+    if [[ $backed_up -gt 0 ]]; then
+      echo -e "${WHITE}📤 Uploading $backed_up crontab files...${NC}"
+      rsync -aAX --update -e "ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH -p $SSH_PORT" \
+        "$crontab_dir/" "$STORAGEBOX_USER@$STORAGEBOX_HOST:$DEST_REL/crontabs/" 2>/dev/null && {
+        echo -e "${GREEN}✅ Crontabs uploaded successfully${NC}"
+      } || {
+        echo -e "${YELLOW}⚠️ Failed to upload crontabs - saved locally in $crontab_dir${NC}"
+      }
+    else
+      echo -e "${YELLOW}💡 No crontabs found to backup${NC}"
+    fi
+
+    # Cleanup
+    rm -rf "$crontab_dir" 2>/dev/null
   else
-    # Regular user mode
-    if crontab -l >/dev/null 2>&1; then
-      echo -e "${WHITE}✓ User crontab found${NC}"
+    echo -e "${CYAN}📅 Backing up current user crontab...${NC}"
+    local crontab_dir="/tmp/crontab-backup-$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$crontab_dir"
+    local current_user=$(whoami)
+
+    # Backup current user's crontab
+    if crontab -l > "$crontab_dir/user-$current_user-crontab" 2>/dev/null; then
+      echo -e "${WHITE}✓ User $current_user crontab backed up${NC}"
+
+      # Upload to storagebox
+      echo -e "${WHITE}📤 Uploading crontab...${NC}"
+      rsync -aAX --update -e "ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH -p $SSH_PORT" \
+        "$crontab_dir/" "$STORAGEBOX_USER@$STORAGEBOX_HOST:$DEST_REL/crontabs/" 2>/dev/null && {
+        echo -e "${GREEN}✅ Crontab uploaded successfully${NC}"
+      } || {
+        echo -e "${YELLOW}⚠️ Failed to upload crontab - saved locally in $crontab_dir${NC}"
+      }
     else
       echo -e "${YELLOW}💡 No crontab found for current user${NC}"
     fi
+
+    # Cleanup
+    rm -rf "$crontab_dir" 2>/dev/null
   fi
-
-  echo -e "${GREEN}✅ Crontab backup completed${NC}"
 }
-
-# Backup crontabs automatically when running as root
-backup_crontabs
 
 # Start backup
 echo -e "\n${CYAN}🚀 Starting backup...${NC}"
@@ -217,6 +277,10 @@ fi
 echo -e "${CYAN}⏱️ Duration: ${WHITE}${duration}s${NC}"
 echo -e "${CYAN}🔄 Sync Type: ${WHITE}Incremental (only changed files)${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
+
+# Backup crontabs AFTER main backup is complete
+echo -e "\n${CYAN}📅 Now backing up crontabs...${NC}"
+backup_crontabs
 
 # Send heartbeat to Better Stack if configured
 if [[ -n "${BETTER_STACK_HEARTBEAT:-}" ]]; then

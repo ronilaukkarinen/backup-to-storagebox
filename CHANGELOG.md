@@ -1,3 +1,7 @@
+### 2025-06-14: 2.7.4
+
+* Revise crontab backup and move it to the end of the script
+
 ### 2025-06-14: 2.7.3
 
 * Fix regression with script exiting too early after root crontab backup
