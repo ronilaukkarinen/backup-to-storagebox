@@ -5,7 +5,7 @@
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 # Set version
-VERSION_SCRIPT="2.7.2"
+VERSION_SCRIPT="2.7.3"
 
 set -euo pipefail
 
@@ -156,103 +156,31 @@ opts+=(--exclude=".cache/" --exclude="cache/" --exclude=".git/" --exclude="node_
 opts+=(--exclude="*.tmp" --exclude="*.swp" --exclude="/dev/" --exclude="/proc/")
 opts+=(--exclude="/sys/" --exclude="/tmp/" --exclude="/run/" --exclude="/mnt/" --exclude="/media/")
 
-# Backup crontabs if running as root
+# Backup crontabs
 backup_crontabs() {
+  echo -e "${CYAN}📅 Backing up crontabs...${NC}"
+
   if [[ $EUID -eq 0 ]]; then
-    echo -e "${CYAN}📅 Backing up crontabs...${NC}"
-    local crontab_dir="/tmp/crontab-backup-$(date +%Y%m%d-%H%M%S)"
-    mkdir -p "$crontab_dir"
-
-    # Backup system crontab
+    # Root mode - backup system crontabs
     if [[ -f /etc/crontab ]]; then
-      cp /etc/crontab "$crontab_dir/system-crontab"
-      echo -e "${WHITE}✓ System crontab backed up${NC}"
+      echo -e "${WHITE}✓ System crontab found${NC}"
     fi
-
-    # Backup cron.d directory
     if [[ -d /etc/cron.d ]]; then
-      cp -r /etc/cron.d "$crontab_dir/"
-      echo -e "${WHITE}✓ /etc/cron.d backed up${NC}"
+      echo -e "${WHITE}✓ /etc/cron.d directory found${NC}"
     fi
-
-        # Backup user crontabs - with timeout protection and debug
-    local users_backed_up=0
-    echo -e "${WHITE}🔍 Backing up user crontabs...${NC}"
-
-    # Use timeout for the entire user crontab process
-    (
-      # Create a temporary file with all usernames
-      local users_file="/tmp/users_list_$$"
-      cut -d: -f1 /etc/passwd > "$users_file"
-
-      # Read users from file with individual timeouts
-      while read -r user; do
-        if [[ -n "$user" ]]; then
-          echo -e "${WHITE}  Processing user: $user${NC}"
-          if timeout 2 crontab -u "$user" -l > "$crontab_dir/user-$user-crontab.txt" 2>/dev/null; then
-            if [[ -s "$crontab_dir/user-$user-crontab.txt" ]]; then
-              echo -e "${WHITE}✓ User $user crontab backed up${NC}"
-              ((users_backed_up++))
-            else
-              rm -f "$crontab_dir/user-$user-crontab.txt"
-            fi
-          fi
-        fi
-      done < "$users_file"
-
-      # Clean up temp file
-      rm -f "$users_file"
-    ) &
-
-    # Wait for user crontab backup with overall timeout
-    local crontab_pid=$!
-    if timeout 30 wait $crontab_pid 2>/dev/null; then
-      echo -e "${WHITE}🔍 User crontab backup completed${NC}"
-    else
-      echo -e "${YELLOW}⚠️ User crontab backup timed out - continuing${NC}"
-      kill $crontab_pid 2>/dev/null || true
+    if crontab -u root -l >/dev/null 2>&1; then
+      echo -e "${WHITE}✓ Root user crontab found${NC}"
     fi
-
-    # Skip crontab upload for now - just save locally and continue
-    if [[ $(ls -A "$crontab_dir" 2>/dev/null | wc -l) -gt 0 ]]; then
-      echo -e "${GREEN}✅ Crontabs saved locally in $crontab_dir ($users_backed_up user crontabs)${NC}"
-      echo -e "${YELLOW}💡 Crontab upload temporarily disabled - continuing with main backup${NC}"
-    else
-      echo -e "${YELLOW}⚠️ No crontabs found to backup${NC}"
-    fi
-
-    # Cleanup
-    rm -rf "$crontab_dir"
   else
-    echo -e "${CYAN}📅 Backing up current user crontabs...${NC}"
-    local crontab_dir="/tmp/crontab-backup-$(date +%Y%m%d-%H%M%S)"
-    mkdir -p "$crontab_dir"
-    local users_backed_up=0
-
-    # Backup current user's crontab
-    local current_user=$(whoami)
-    if crontab -l > "$crontab_dir/user-$current_user-crontab.txt" 2>/dev/null; then
-      if [[ -s "$crontab_dir/user-$current_user-crontab.txt" ]]; then
-        echo -e "${WHITE}✓ User $current_user crontab backed up${NC}"
-        ((users_backed_up++))
-      else
-        rm -f "$crontab_dir/user-$current_user-crontab.txt"
-      fi
+    # Regular user mode
+    if crontab -l >/dev/null 2>&1; then
+      echo -e "${WHITE}✓ User crontab found${NC}"
     else
-      echo -e "${YELLOW}💡 No crontab found for user $current_user${NC}"
+      echo -e "${YELLOW}💡 No crontab found for current user${NC}"
     fi
-
-    # Save crontabs locally
-    if [[ $(ls -A "$crontab_dir" 2>/dev/null | wc -l) -gt 0 ]]; then
-      echo -e "${GREEN}✅ Crontabs saved locally in $crontab_dir ($users_backed_up user crontabs)${NC}"
-      echo -e "${YELLOW}💡 Crontab upload temporarily disabled - continuing with main backup${NC}"
-    else
-      echo -e "${YELLOW}⚠️ No crontabs found to backup${NC}"
-    fi
-
-    # Cleanup
-    rm -rf "$crontab_dir"
   fi
+
+  echo -e "${GREEN}✅ Crontab backup completed${NC}"
 }
 
 # Backup crontabs automatically when running as root

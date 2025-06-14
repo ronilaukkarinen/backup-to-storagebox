@@ -1,6 +1,11 @@
+### 2025-06-14: 2.7.3
+
+* Fix regression with script exiting too early after root crontab backup
+
 ### 2025-06-14: 2.7.2
 
 * Backup current user's crontab if not root
+* Fix: Backup all user crontabs if root
 
 ### 2025-06-14: 2.7.1
 
