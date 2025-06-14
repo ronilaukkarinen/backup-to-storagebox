@@ -5,7 +5,7 @@
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 # Set version
-VERSION_SCRIPT="2.7.0"
+VERSION_SCRIPT="2.7.1"
 
 set -euo pipefail
 
@@ -248,14 +248,14 @@ echo -e "\n${CYAN}📊 Backup Summary${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
 
 if [[ $exit_code -eq 0 ]]; then
-  echo -e "${GREEN}🎉 Status: ${WHITE}COMPLETED SUCCESSFULLY${NC}"
+  echo -e "${GREEN}🎉 Status: ${WHITE}Completed successfully${NC}"
   echo -e "${GREEN}✅ Result: ${WHITE}All files transferred without errors${NC}"
 elif [[ $exit_code -eq 23 ]]; then
-  echo -e "${GREEN}🎉 Status: ${WHITE}COMPLETED WITH WARNINGS${NC}"
+  echo -e "${GREEN}🎉 Status: ${WHITE}Completed with warnings${NC}"
   echo -e "${YELLOW}⚠️ Result: ${WHITE}Some files/attributes were not transferred (ACL errors)${NC}"
   echo -e "${YELLOW}💡 Note: ${WHITE}This is normal for system backups - backup is successful${NC}"
 else
-  echo -e "${RED}❌ Status: ${WHITE}COMPLETED WITH ERRORS${NC}"
+  echo -e "${RED}❌ Status: ${WHITE}Completed with errors${NC}"
   echo -e "${RED}🚨 Result: ${WHITE}Backup failed with exit code $exit_code${NC}"
 fi
 

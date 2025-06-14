@@ -1,3 +1,7 @@
+### 2025-06-14: 2.7.1
+
+* Improve formatting of the backup summary
+
 ### 2025-06-14: 2.7.0
 
 * Fix ongoing issues with the heartbeat
