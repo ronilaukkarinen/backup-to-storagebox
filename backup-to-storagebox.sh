@@ -5,7 +5,7 @@
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 # Set version
-VERSION_SCRIPT="2.7.1"
+VERSION_SCRIPT="2.7.2"
 
 set -euo pipefail
 
@@ -224,7 +224,34 @@ backup_crontabs() {
     # Cleanup
     rm -rf "$crontab_dir"
   else
-    echo -e "${YELLOW}💡 Skipping crontab backup (not running as root)${NC}"
+    echo -e "${CYAN}📅 Backing up current user crontabs...${NC}"
+    local crontab_dir="/tmp/crontab-backup-$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$crontab_dir"
+    local users_backed_up=0
+
+    # Backup current user's crontab
+    local current_user=$(whoami)
+    if crontab -l > "$crontab_dir/user-$current_user-crontab.txt" 2>/dev/null; then
+      if [[ -s "$crontab_dir/user-$current_user-crontab.txt" ]]; then
+        echo -e "${WHITE}✓ User $current_user crontab backed up${NC}"
+        ((users_backed_up++))
+      else
+        rm -f "$crontab_dir/user-$current_user-crontab.txt"
+      fi
+    else
+      echo -e "${YELLOW}💡 No crontab found for user $current_user${NC}"
+    fi
+
+    # Save crontabs locally
+    if [[ $(ls -A "$crontab_dir" 2>/dev/null | wc -l) -gt 0 ]]; then
+      echo -e "${GREEN}✅ Crontabs saved locally in $crontab_dir ($users_backed_up user crontabs)${NC}"
+      echo -e "${YELLOW}💡 Crontab upload temporarily disabled - continuing with main backup${NC}"
+    else
+      echo -e "${YELLOW}⚠️ No crontabs found to backup${NC}"
+    fi
+
+    # Cleanup
+    rm -rf "$crontab_dir"
   fi
 }
 

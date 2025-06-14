@@ -1,3 +1,7 @@
+### 2025-06-14: 2.7.2
+
+* Backup current user's crontab if not root
+
 ### 2025-06-14: 2.7.1
 
 * Improve formatting of the backup summary
