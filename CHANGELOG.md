@@ -1,3 +1,7 @@
+### 2025-06-14: 2.7.5
+
+* Add lock file handling to prevent multiple instances
+
 ### 2025-06-14: 2.7.4
 
 * Revise crontab backup and move it to the end of the script

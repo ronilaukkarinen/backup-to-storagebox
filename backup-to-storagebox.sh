@@ -5,12 +5,39 @@
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 # Set version
-VERSION_SCRIPT="2.7.4"
+VERSION_SCRIPT="2.7.5"
 
 set -euo pipefail
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lock file to prevent multiple instances
+LOCK_FILE="/tmp/backup-to-storagebox.lock"
+
+# Function to cleanup lock file on exit
+cleanup_lock() {
+  rm -f "$LOCK_FILE"
+}
+
+# Check if another instance is running
+if [[ -f "$LOCK_FILE" ]]; then
+  PID=$(cat "$LOCK_FILE" 2>/dev/null || echo "")
+  if [[ -n "$PID" ]] && kill -0 "$PID" 2>/dev/null; then
+    echo -e "${RED}❌ ERROR: Another instance is already running (PID: $PID)${NC}"
+    echo -e "${YELLOW}💡 If you're sure no other instance is running, remove: $LOCK_FILE${NC}"
+    exit 1
+  else
+    echo -e "${YELLOW}⚠️ Stale lock file found, removing...${NC}"
+    rm -f "$LOCK_FILE"
+  fi
+fi
+
+# Create lock file with current PID
+echo $$ > "$LOCK_FILE"
+
+# Set trap to cleanup lock file on exit (normal exit, interrupt, or termination)
+trap cleanup_lock EXIT INT TERM
 
 # Colors
 RED='\033[0;31m'
