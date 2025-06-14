@@ -108,7 +108,7 @@ echo -e "${WHITE}🔍 Testing SSH key authentication...${NC}"
 if echo "pwd" | sftp $sftp_opts_key "$STORAGEBOX_USER@$STORAGEBOX_HOST" >/dev/null 2>&1; then
   echo -e "${GREEN}✅ SSH key authentication successful${NC}"
 else
-  echo -e "${YELLOW}⚠️  SSH key authentication failed${NC}"
+  echo -e "${YELLOW}⚠️ SSH key authentication failed${NC}"
   echo -e "${WHITE}🔧 Would you like to install the SSH key using Hetzner's install-ssh-key service? (y/n)${NC}"
   read -r install_key
   if [[ "$install_key" =~ ^[Yy]$ ]]; then
@@ -121,7 +121,7 @@ else
       if echo "pwd" | sftp $sftp_opts_key "$STORAGEBOX_USER@$STORAGEBOX_HOST" >/dev/null 2>&1; then
         echo -e "${GREEN}✅ SSH key authentication now working${NC}"
       else
-        echo -e "${YELLOW}⚠️  SSH key authentication still failing - continuing anyway${NC}"
+        echo -e "${YELLOW}⚠️ SSH key authentication still failing - continuing anyway${NC}"
       fi
     else
       echo -e "${RED}❌ Failed to install SSH key${NC}"
