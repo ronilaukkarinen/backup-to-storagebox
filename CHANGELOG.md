@@ -1,3 +1,13 @@
+### 2025-06-14: 2.4.0
+
+* Fix SSH key authentication using Hetzner's official install-ssh-key service
+* Replace manual SSH key installation with proper Hetzner-compatible method
+* Add interactive prompt for SSH key installation instead of automatic attempts
+* Improve SSH key authentication testing and error handling
+* Ensure proper RFC4716 and OpenSSH key format handling for port 23
+* Follow official Hetzner Storage Box documentation for SSH key management
+* Enhance user experience with better feedback during authentication setup
+
 ### 2025-06-13: 2.3.0
 
 * Simplify backup completion logic - never show "failure" if connection is working

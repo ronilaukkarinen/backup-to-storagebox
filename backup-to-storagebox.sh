@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ⚡ Backup to Storagebox - Simple backup solution for Hetzner Storagebox
-# Version: 2.3.0
+# Version: 2.4.0
 # Usage: ./backup-to-storagebox.sh <source_path> <dest_path>
 # Example: ./backup-to-storagebox.sh / /backups/infinity/linux
 
@@ -34,7 +34,7 @@ load_config() {
   local env_file="$SCRIPT_DIR/.env"
 
   if [[ -f "$env_file" ]]; then
-    echo -e "${GREEN}⚙️  Loading configuration from $env_file${NC}"
+    echo -e "${GREEN}⚙️ Loading configuration from $env_file${NC}"
     # Source the .env file
     set -a  # Automatically export all variables
     source "$env_file"
@@ -50,7 +50,6 @@ load_config() {
   SSH_KEY_PATH="${SSH_KEY_PATH:-$HOME/.ssh/id_rsa}"
   RSYNC_MAX_SIZE="${RSYNC_MAX_SIZE:-2G}"
   RSYNC_TIMEOUT="${RSYNC_TIMEOUT:-300}"
-  DRY_RUN="${DRY_RUN:-false}"
 
   # Validate required variables
   if [[ -z "${STORAGEBOX_USER:-}" ]] || [[ -z "${STORAGEBOX_HOST:-}" ]]; then
@@ -85,20 +84,52 @@ fi
 # Remove leading slash from dest for relative path
 DEST_REL="${DEST_PATH#/}"
 
-echo -e "\n${CYAN}⚡ Backup to Storagebox v2.3.0${NC}"
+echo -e "\n${CYAN}⚡ Backup to Storagebox v2.4.0${NC}"
 echo -e "${WHITE}📁 Source: ${YELLOW}$SOURCE_PATH${NC}"
 echo -e "${WHITE}🎯 Dest: ${YELLOW}$STORAGEBOX_USER@$STORAGEBOX_HOST:$DEST_REL${NC}"
 echo -e "${WHITE}📏 Largest file allowed: ${YELLOW}$RSYNC_MAX_SIZE${NC}"
-echo -e "${WHITE}🧪 Dry run: ${YELLOW}$DRY_RUN${NC}"
 
 # Test connection
 echo -e "\n${CYAN}🔌 Testing connection...${NC}"
-sftp_opts="-o BatchMode=yes -o StrictHostKeyChecking=no -i $SSH_KEY_PATH -P $SSH_PORT"
+echo -e "${WHITE}🔑 SSH Key: ${YELLOW}$SSH_KEY_PATH${NC}"
+echo -e "${WHITE}🚪 Port: ${YELLOW}$SSH_PORT${NC}"
 
-if ! echo "pwd" | sftp $sftp_opts "$STORAGEBOX_USER@$STORAGEBOX_HOST" >/dev/null 2>&1; then
-  echo -e "${RED}❌ Connection failed${NC}"
-  echo -e "${YELLOW}💡 Check your .env configuration and SSH key${NC}"
+# Check if SSH key exists
+if [[ ! -f "$SSH_KEY_PATH" ]]; then
+  echo -e "${RED}❌ SSH key not found: $SSH_KEY_PATH${NC}"
+  echo -e "${YELLOW}💡 Generate one with: ssh-keygen -t rsa -b 4096 -f $SSH_KEY_PATH${NC}"
   exit 1
+fi
+
+# Test connection (non-blocking)
+sftp_opts_key="-o BatchMode=yes -o StrictHostKeyChecking=no -i $SSH_KEY_PATH -P $SSH_PORT"
+
+echo -e "${WHITE}🔍 Testing SSH key authentication...${NC}"
+if echo "pwd" | sftp $sftp_opts_key "$STORAGEBOX_USER@$STORAGEBOX_HOST" >/dev/null 2>&1; then
+  echo -e "${GREEN}✅ SSH key authentication successful${NC}"
+else
+  echo -e "${YELLOW}⚠️  SSH key authentication failed${NC}"
+  echo -e "${WHITE}🔧 Would you like to install the SSH key using Hetzner's install-ssh-key service? (y/n)${NC}"
+  read -r install_key
+  if [[ "$install_key" =~ ^[Yy]$ ]]; then
+    echo -e "${WHITE}Installing SSH key using Hetzner's service (you'll be prompted for your Storagebox password):${NC}"
+    if cat "$SSH_KEY_PATH.pub" | ssh -p "$SSH_PORT" "$STORAGEBOX_USER@$STORAGEBOX_HOST" install-ssh-key; then
+      echo -e "${GREEN}✅ SSH key installed successfully${NC}"
+
+      # Test again
+      echo -e "${WHITE}🔍 Testing connection with installed key...${NC}"
+      if echo "pwd" | sftp $sftp_opts_key "$STORAGEBOX_USER@$STORAGEBOX_HOST" >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ SSH key authentication now working${NC}"
+      else
+        echo -e "${YELLOW}⚠️  SSH key authentication still failing - continuing anyway${NC}"
+      fi
+    else
+      echo -e "${RED}❌ Failed to install SSH key${NC}"
+      echo -e "${YELLOW}💡 Continuing with backup - rsync will prompt for password${NC}"
+    fi
+  else
+    echo -e "${YELLOW}💡 Continuing without installing SSH key - rsync will prompt for password${NC}"
+  fi
 fi
 echo -e "${GREEN}✅ Connected${NC}"
 
@@ -109,7 +140,7 @@ path=""
 for part in "${parts[@]}"; do
   [[ -n "$part" ]] && {
     path="${path:+$path/}$part"
-    echo "mkdir $path" | sftp $sftp_opts "$STORAGEBOX_USER@$STORAGEBOX_HOST" 2>/dev/null || true
+    echo "mkdir $path" | sftp $sftp_opts_key "$STORAGEBOX_USER@$STORAGEBOX_HOST" 2>/dev/null || true
   }
 done
 echo -e "${GREEN}✅ Destination ready${NC}"
@@ -128,7 +159,7 @@ opts+=(--exclude=".cache/" --exclude="cache/" --exclude=".git/" --exclude="node_
 opts+=(--exclude="*.tmp" --exclude="*.swp" --exclude="/dev/" --exclude="/proc/")
 opts+=(--exclude="/sys/" --exclude="/tmp/" --exclude="/run/" --exclude="/mnt/" --exclude="/media/")
 
-[[ "$DRY_RUN" == "true" ]] && opts+=(--dry-run) && echo -e "${YELLOW}🔍 DRY RUN MODE${NC}"
+
 
 # Start backup
 echo -e "\n${CYAN}🚀 Starting backup...${NC}"
