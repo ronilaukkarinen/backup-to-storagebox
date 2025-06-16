@@ -1,3 +1,7 @@
+### 2025-06-14: 2.7.6
+
+* Fix critical issue where .excludes are not being properly considered
+
 ### 2025-06-14: 2.7.5
 
 * Add lock file handling to prevent multiple instances

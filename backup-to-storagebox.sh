@@ -5,7 +5,7 @@
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 # Set version
-VERSION_SCRIPT="2.7.5"
+VERSION_SCRIPT="2.7.6"
 
 set -euo pipefail
 
@@ -182,6 +182,12 @@ fi
 opts+=(--exclude=".cache/" --exclude="cache/" --exclude=".git/" --exclude="node_modules/")
 opts+=(--exclude="*.tmp" --exclude="*.swp" --exclude="/dev/" --exclude="/proc/")
 opts+=(--exclude="/sys/" --exclude="/tmp/" --exclude="/run/" --exclude="/mnt/" --exclude="/media/")
+
+# Check if .excludes file exists and add it to rsync options
+if [[ -f "$SCRIPT_DIR/.excludes" ]]; then
+  opts+=(--exclude-from="$SCRIPT_DIR/.excludes")
+  echo -e "${GREEN}📋 Using custom exclusions from .excludes file${NC}"
+fi
 
 # Backup crontabs
 backup_crontabs() {
