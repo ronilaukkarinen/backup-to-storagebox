@@ -1,46 +1,46 @@
-### 2025-06-21: 2.7.7
+### 2.7.7: 2025-06-21
 
 * Fixes to Better Stack heartbeat logic
 
-### 2025-06-14: 2.7.6
+### 2.7.6: 2025-06-14
 
 * Fix critical issue where .excludes are not being properly considered
 
-### 2025-06-14: 2.7.5
+### 2.7.5: 2025-06-14
 
 * Add lock file handling to prevent multiple instances
 * Finally fix crontab backup issues
 * Add verbose logging to terminal
 
-### 2025-06-14: 2.7.4
+### 2.7.4: 2025-06-14
 
 * Revise crontab backup and move it to the end of the script
 
-### 2025-06-14: 2.7.3
+### 2.7.3: 2025-06-14
 
 * Fix regression with script exiting too early after root crontab backup
 
-### 2025-06-14: 2.7.2
+### 2.7.2: 2025-06-14
 
 * Backup current user's crontab if not root
 * Fix: Backup all user crontabs if root
 
-### 2025-06-14: 2.7.1
+### 2.7.1: 2025-06-14
 
 * Improve formatting of the backup summary
 
-### 2025-06-14: 2.7.0
+### 2.7.0: 2025-06-14
 
 * Fix ongoing issues with the heartbeat
 * Make sure the backup summary is always shown
 * Better version control
 * Add badges to README.md
 
-### 2025-06-14: 2.6.1
+### 2.6.1: 2025-06-14
 
 * Make Better Stack heartbeat more bulletproof
 
-### 2025-06-14: 2.6.0
+### 2.6.0: 2025-06-14
 
 * Fix user crontab backup hanging issue with timeout protection
 * Add background process execution for user crontab backup to prevent script blocking
@@ -49,12 +49,12 @@
 * Fix crontab backup to save individual .txt files for each user
 * Add guaranteed script continuation with force-kill protection for hanging processes
 
-### 2025-06-14: 2.5.0
+### 2.5.0: 2025-06-14
 
 * Add Better Stack heartbeat monitoring support via BETTER_STACK_HEARTBEAT environment variable
 * Restore automatic crontab backup functionality when running as root
 
-### 2025-06-14: 2.4.0
+### 2.4.0: 2025-06-14
 
 * Fix SSH key authentication using Hetzner's official install-ssh-key service
 * Replace manual SSH key installation with proper Hetzner-compatible method
@@ -64,14 +64,14 @@
 * Follow official Hetzner Storage Box documentation for SSH key management
 * Enhance user experience with better feedback during authentication setup
 
-### 2025-06-13: 2.3.0
+### 2.3.0: 2025-06-13
 
 * Simplify backup completion logic - never show "failure" if connection is working
 * All backups are considered successful since SSH connection is pre-tested
 * Remove complex exit code handling - just show success with optional note about skipped files
 * Improve user experience by eliminating false failure messages
 
-### 2025-06-13: 2.2.0
+### 2.2.0: 2025-06-13
 
 * Fix rsync exit code handling - now properly recognizes partial success
 * Exit code 23 (some files/attrs not transferred) is now treated as successful with warning
@@ -79,7 +79,7 @@
 * Backup completion messages now show actual duration in all cases
 * Improve backup success reporting to avoid false failure messages
 
-### 2025-06-13: 2.1.0
+### 2.1.0: 2025-06-13
 
 * Add .env file configuration for credentials and settings
 * Remove hardcoded defaults from script - all configuration now in .env
@@ -88,7 +88,7 @@
 * Improve configuration management organization
 * Fix proper separation of configuration from code
 
-### 2025-06-13: 2.0.0
+### 2.0.0: 2025-06-13
 
 * Major rewrite: simplify to use command-line arguments instead of config files
 * Breaking change: now uses `./script.sh <source> <dest>` syntax
@@ -98,7 +98,7 @@
 * Fix relative path handling for Hetzner Storageboxes
 * Example: `./backup-to-storagebox.sh / /backups/myserver/linux`
 
-### 2025-06-13: 1.3.0
+### 1.3.0: 2025-06-13
 
 * Add RSYNC_MAX_SIZE option to limit file size (e.g., 2G to skip files over 2GB)
 * Add progress display with --progress and --stats for real-time transfer monitoring
@@ -109,7 +109,7 @@
 * Remove problematic --mkpath option for better compatibility
 * Fix SFTP connection syntax errors
 
-### 2025-06-13: 1.2.1
+### 1.2.1: 2025-06-13
 
 * Critical fix: fix remote directory structure creation for nested paths
 * Critical fix: resolve "No such file or directory" errors during backup
@@ -120,7 +120,7 @@
 * Fix destination path construction to match created directory structure
 * Restore configuration example files (env.example, directories.example, excludes.example)
 
-### 2025-06-13: 1.1.0
+### 1.1.0: 2025-06-13
 
 * Add colorful output with emojis for better user experience
 * Add automatic SSH key installation using Hetzner's install-ssh-key service
@@ -129,7 +129,7 @@
 * Enhance error messages with color coding and better formatting
 * Add visual progress indicators and section separators
 
-### 2025-06-13: 1.0.0
+### 1.0.0: 2025-06-13
 
 * Initial release of improved backup script
 * Add configuration via .env file for credentials
