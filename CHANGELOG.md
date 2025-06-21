@@ -1,3 +1,7 @@
+### 2025-06-21: 2.7.7
+
+* Fixes to Better Stack heartbeat logic
+
 ### 2025-06-14: 2.7.6
 
 * Fix critical issue where .excludes are not being properly considered

@@ -5,7 +5,7 @@
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 # Set version
-VERSION_SCRIPT="2.7.6"
+VERSION_SCRIPT="2.7.7"
 
 set -euo pipefail
 
@@ -353,9 +353,9 @@ backup_crontabs
 if [[ -n "${BETTER_STACK_HEARTBEAT:-}" ]]; then
   echo -e "\n${CYAN}💓 Sending heartbeat to Better Stack...${NC}"
 
-  # Send success heartbeat (since main backup is disabled, assume success)
+  # Send heartbeat only on success (Better Stack detects missing heartbeats as failures)
   if [[ -n "${exit_code:-}" ]]; then
-    # Main backup was run, use its exit code
+    # Main backup was run, only send heartbeat on success
     if [[ $exit_code -eq 0 || $exit_code -eq 23 ]]; then
       # Success heartbeat (exit code 0 or 23 which is partial success)
       if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT" >/dev/null 2>&1; then
@@ -364,12 +364,8 @@ if [[ -n "${BETTER_STACK_HEARTBEAT:-}" ]]; then
         echo -e "${YELLOW}⚠️ Failed to send heartbeat (backup still completed)${NC}"
       fi
     else
-      # Failure heartbeat with exit code
-      if curl -fsS -m 10 --retry 3 "$BETTER_STACK_HEARTBEAT/$exit_code" >/dev/null 2>&1; then
-        echo -e "${GREEN}✅ Failure heartbeat sent (exit code: $exit_code)${NC}"
-      else
-        echo -e "${YELLOW}⚠️ Failed to send failure heartbeat${NC}"
-      fi
+      # Skip heartbeat on failure - Better Stack will detect missing heartbeat as failure
+      echo -e "${YELLOW}⚠️ Backup failed with exit code $exit_code - no heartbeat sent${NC}"
     fi
   else
     # Main backup was disabled, send success heartbeat for crontab backup
