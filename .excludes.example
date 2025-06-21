@@ -1,0 +1,63 @@
+# Exclude patterns for rsync (one per line)
+# Copy this file to .excludes and customize as needed
+# Empty lines and lines starting with # are ignored
+
+# Cache directories
+.cache/
+cache/
+.local/lib/
+.cpan/
+.npm/
+.bundle/
+
+# Development directories
+.git/
+node_modules/
+virtualenv/
+site-packages/
+.rbenv/
+.nvm/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+tmp/
+
+# Log files (uncomment if you want to exclude all logs)
+# *.log
+# log/
+
+# Runtime files
+*.pid
+*.sock
+
+# System directories that shouldn't be backed up
+/dev/
+/proc/
+/sys/
+/tmp/
+/run/
+/mnt/
+/media/
+
+# Large media files (uncomment if you want to exclude)
+# *.iso
+# *.img
+# *.dmg
+
+# Swap files
+*.swp
+*.swo
+
+# Editor backups
+*~
+.*.swp
+
+# Package manager caches
+.yarn/
+.composer/
+
+# Browser caches
+.mozilla/firefox/*/Cache/
+.config/google-chrome/Default/Cache/
