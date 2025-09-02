@@ -5,7 +5,7 @@
 # Example: ./backup-to-storagebox.sh / /backups/myserver/linux
 
 # Set version
-VERSION_SCRIPT="2.7.7"
+VERSION_SCRIPT="2.8.0"
 
 set -euo pipefail
 
@@ -79,6 +79,7 @@ load_config() {
   SSH_KEY_PATH="${SSH_KEY_PATH:-$HOME/.ssh/id_rsa}"
   RSYNC_MAX_SIZE="${RSYNC_MAX_SIZE:-2G}"
   RSYNC_TIMEOUT="${RSYNC_TIMEOUT:-300}"
+  EXCLUDES="${EXCLUDES:-}"  # Comma-separated list of exclude patterns (empty = no excludes)
 
   # Validate required variables
   if [[ -z "${STORAGEBOX_USER:-}" ]] || [[ -z "${STORAGEBOX_HOST:-}" ]]; then
@@ -178,15 +179,15 @@ if [[ -n "${RSYNC_BANDWIDTH_LIMIT:-}" ]]; then
   opts+=(--bwlimit="$RSYNC_BANDWIDTH_LIMIT")
 fi
 
-# Add common excludes
-opts+=(--exclude=".cache/" --exclude="cache/" --exclude=".git/" --exclude="node_modules/")
-opts+=(--exclude="*.tmp" --exclude="*.swp" --exclude="/dev/" --exclude="/proc/")
-opts+=(--exclude="/sys/" --exclude="/tmp/" --exclude="/run/" --exclude="/mnt/" --exclude="/media/")
-
-# Check if .excludes file exists and add it to rsync options
-if [[ -f "$SCRIPT_DIR/.excludes" ]]; then
-  opts+=(--exclude-from="$SCRIPT_DIR/.excludes")
-  echo -e "${GREEN}📋 Using custom exclusions from .excludes file${NC}"
+# Add excludes from environment variable (if not empty)
+if [[ -n "$EXCLUDES" ]]; then
+  IFS=',' read -ra exclude_patterns <<< "$EXCLUDES"
+  for pattern in "${exclude_patterns[@]}"; do
+    # Trim whitespace from pattern
+    pattern=$(echo "$pattern" | xargs)
+    [[ -n "$pattern" ]] && opts+=(--exclude="$pattern")
+  done
+  echo -e "${GREEN}📋 Using excludes: $EXCLUDES${NC}"
 fi
 
 # Backup crontabs

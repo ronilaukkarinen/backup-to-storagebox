@@ -1,6 +1,6 @@
 # 🚀 Backup to Storagebox
 
-![Version](https://img.shields.io/badge/version-2.7.7-blue?style=for-the-badge) ![Hetzner](https://img.shields.io/badge/hetzner-%23d50c2d.svg?style=for-the-badge&logo=hetzner&logoColor=white) ![Better Stack](https://img.shields.io/badge/Better%20Stack-%235b63d3.svg?style=for-the-badge&logo=betterstack&logoColor=white) ![Rsync](https://img.shields.io/badge/rsync-%23FF6B35.svg?style=for-the-badge&logo=rsync&logoColor=white) ![Bash](https://img.shields.io/badge/bash-%23121011.svg?style=for-the-badge&color=%23222222&logo=gnu-bash&logoColor=white) 
+![Version](https://img.shields.io/badge/version-2.8.0-blue?style=for-the-badge) ![Hetzner](https://img.shields.io/badge/hetzner-%23d50c2d.svg?style=for-the-badge&logo=hetzner&logoColor=white) ![Better Stack](https://img.shields.io/badge/Better%20Stack-%235b63d3.svg?style=for-the-badge&logo=betterstack&logoColor=white) ![Rsync](https://img.shields.io/badge/rsync-%23FF6B35.svg?style=for-the-badge&logo=rsync&logoColor=white) ![Bash](https://img.shields.io/badge/bash-%23121011.svg?style=for-the-badge&color=%23222222&logo=gnu-bash&logoColor=white) 
 
 A simple, fast backup script for Hetzner Storageboxes.
 
@@ -37,7 +37,7 @@ cp .env.example .env
 - ✅ **Simple command-line interface** - No config files needed
 - ✅ **Progress display** - See individual file transfers
 - ✅ **File size limiting** - Skip large files automatically
-- ✅ **Smart excludes** - Automatically excludes cache, temp files, etc.
+- ✅ **Configurable excludes** - Control what to exclude via EXCLUDES environment variable
 - ✅ **Incremental backups** - Only transfers changed files
 - ✅ **Automatic crontab backup** - Backs up all crontabs when running as root
 - ✅ **Better Stack monitoring** - Optional heartbeat notifications

@@ -1,3 +1,7 @@
+### 2.8.0: 2025-09-02
+
+* Simplify excludes to single EXCLUDES comma-separated environment variable
+
 ### 2.7.7: 2025-06-21
 
 * Fixes to Better Stack heartbeat logic
