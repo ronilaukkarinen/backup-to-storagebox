@@ -8,7 +8,7 @@ A simple, fast backup script for Hetzner Storageboxes.
 
 ```bash
 # 1. Copy and configure the environment file
-cp env.example .env
+cp .env.example .env
 # Edit .env with your Storagebox credentials
 
 # 2. Run backups with simple command-line syntax
