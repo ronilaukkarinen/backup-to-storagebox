@@ -17,30 +17,6 @@ cp .env.example .env
 ./backup-to-storagebox.sh /var/www /backups/myserver/www
 ```
 
-## 📋 Usage
-
-```bash
-./backup-to-storagebox.sh <source_path> <dest_path>
-```
-
-### Configuration
-
-1. **Copy the example configuration:**
-   ```bash
-   cp env.example .env
-   ```
-
-2. **Edit `.env` with your settings:**
-   ```bash
-   # Required
-   STORAGEBOX_USER=u123456
-   STORAGEBOX_HOST=u123456.your-storagebox.de
-   
-   # Optional
-   RSYNC_MAX_SIZE=2G
-   DRY_RUN=false
-   ```
-
 ### Required environment variables
 
 - `STORAGEBOX_USER` - Your Storagebox username (e.g., u123456)
@@ -67,26 +43,6 @@ cp .env.example .env
 - ✅ **Better Stack monitoring** - Optional heartbeat notifications
 - ✅ **Dry run support** - Test before running
 - ✅ **Hetzner Storagebox optimized** - Works perfectly with Storagebox SSH/SFTP
-
-## 📝 Examples
-
-### Initial setup
-```bash
-# Copy and configure
-cp env.example .env
-nano .env  # Edit with your credentials
-```
-
-### Backup entire system
-```bash
-./backup-to-storagebox.sh / /backups/myserver/linux
-```
-
-### Backup home directory with custom settings
-```bash
-# Edit .env to set RSYNC_MAX_SIZE=1G
-./backup-to-storagebox.sh /home/user /backups/myserver/home
-```
 
 ### Test backup (dry run)
 ```bash
@@ -116,14 +72,6 @@ crontab -e
 # Add this line for daily backup at 2:00 AM
 0 2 * * * /path/to/backup-to-storagebox.sh / /backups/myserver/linux >> /var/log/backup.log 2>&1
 ```
-
-## 🚫 Default excludes
-
-The script automatically excludes:
-- Cache directories (`.cache/`, `cache/`)
-- Development files (`.git/`, `node_modules/`)
-- Temporary files (`*.tmp`, `*.swp`)
-- System directories (`/dev/`, `/proc/`, `/sys/`, `/tmp/`, `/run/`, `/mnt/`, `/media/`)
 
 ## 📊 What you'll see
 
