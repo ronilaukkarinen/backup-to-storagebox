@@ -1,3 +1,7 @@
+### 2.8.1: 2025-09-16
+
+* Fix color variables being referenced before definition
+
 ### 2.8.0: 2025-09-02
 
 * Simplify excludes to single EXCLUDES comma-separated environment variable
